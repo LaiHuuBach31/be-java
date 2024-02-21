@@ -20,19 +20,21 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(
+    public ResponseEntity<Result> register(
             @RequestBody RegisterRequest request
     ){
+        AuthenticationResponse response = authenticationService.register(request);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Register successfully", authenticationService.register(request)));
-//        return ResponseEntity.ok(authenticationService.register(request));
+                .body(new Result(200, "Register successfully", response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> authenticate(
+    public ResponseEntity<Result> authenticate(
             @RequestBody AuthenticationRequest request
     ){
-        return ResponseEntity.ok(authenticationService.authenticate(request));
+        AuthenticationResponse response = authenticationService.authenticate(request);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Login successfully", response));
     }
 
     @PostMapping("/refresh-token")

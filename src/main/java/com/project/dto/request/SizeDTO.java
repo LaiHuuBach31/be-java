@@ -1,4 +1,4 @@
-package com.project.dto;
+package com.project.dto.request;
 
 import com.project.model.Size;
 import com.project.model.VariantProduct;

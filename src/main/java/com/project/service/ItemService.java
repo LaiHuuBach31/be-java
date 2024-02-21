@@ -1,6 +1,6 @@
 package com.project.service;
 
-import com.project.model.Item;
+import com.project.dto.request.ItemDTO;
 
-public interface ItemService extends Generic<Item, Integer>{
+public interface ItemService extends Generic<ItemDTO, ItemDTO>{
 }

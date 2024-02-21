@@ -1,78 +1,139 @@
 package com.project.service.impl;
 
+import com.project.dto.UserDTO;
+import com.project.exception.base.CustomException;
+import com.project.model.Product;
+import com.project.model.Token;
 import com.project.model.User;
+import com.project.repository.TokenRepository;
 import com.project.repository.UserRepository;
 import com.project.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
+    private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public List<User> getAll() {
-        return this.userRepository.findAll();
-    }
+    public Page<UserDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
+        Page<User> users;
+        Pageable pageable;
+        if (keyword == null) {
+            pageable = PageRequest.of(pageNo-1, pageSize);
+            users = this.userRepository.findAll(pageable);
+        } else {
+            List<User> list = this.userRepository.listByFullName(keyword);
+            pageable = PageRequest.of(pageNo-1, pageSize);
+            int start = (int) pageable.getOffset();
+            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+            list = list.subList(start, end);
+            users = new PageImpl<>(list, pageable, list.size());
+        }
+        if (!users.isEmpty()) {
+            List<UserDTO> userDtoList = users.getContent()
+                    .stream()
+                    .map(user -> modelMapper.map(user, UserDTO.class))
+                    .collect(Collectors.toList());
 
-    @Override
-    public User findById(Integer key) {
-        return this.userRepository.findById(key).orElse(null);
-    }
-
-    @Override
-    public List<User> findByName(String name) {
+            return new PageImpl<>(userDtoList, pageable, users.getTotalElements());
+        }
         return null;
     }
 
     @Override
-    public User saveOrUpdate(User object) {
-        return this.userRepository.save(object);
+    public UserDTO findById(Integer id) {
+        User user = this.userRepository.findById(id).orElse(null);
+        if(user == null) {
+            throw new CustomException.NotFoundException("User not found with id : " + id, 404, new Date());
+        }
+        return modelMapper.map(user, UserDTO.class);
     }
 
     @Override
-    public boolean existsById(Integer key) {
-        return this.userRepository.existsById(key);
+    public List<UserDTO> findByName(String name) {
+        if(name.isEmpty()){
+            throw new CustomException.NotFoundException("Name user not empty", 404, new Date());
+        }
+        List<User> list = this.userRepository.findByFullName(name);
+        return list.stream().map(e -> modelMapper.map(e, UserDTO.class)).collect(Collectors.toList());
     }
 
     @Override
-    public void delete(Integer key) {
-        this.userRepository.delete(findById(key));
+    public UserDTO save(UserDTO userDto) {
+        this.checkUnique(userDto.getEmail().trim());
+        User userRequest = modelMapper.map(userDto, User.class);
+        User user = this.userRepository.save(userRequest);
+        return modelMapper.map(user, UserDTO.class);
     }
 
     @Override
-    public Page<User> pagination(Integer pageNo, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNo-1, pageSize);
-        return this.userRepository.findAll(pageable);
+    public UserDTO update(UserDTO userDto, Integer id) {
+        this.checkUnique(userDto.getEmail().trim());
+        User user = modelMapper.map(this.findById(id), User.class);
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        user.setFullName(userDto.getFullName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setGender(userDto.getGender());
+        user.setBirthday(userDto.getBirthday());
+        user.setAddress(userDto.getAddress());
+        user.setTelephone(userDto.getTelephone());
+        user.setRole(userDto.getRole());
+        user = this.userRepository.save(user);
+        return modelMapper.map(user, UserDTO.class);
     }
 
     @Override
-    public List<User> search(String keyWord) {
-        return this.userRepository.listByFullName(keyWord);
+    public void delete(Integer id, boolean check) {
+        User user = this.userRepository.findById(id).orElse(null);
+        if(user == null) {
+            throw new CustomException.NotFoundException("User not found with id : " + id, 404, new Date());
+        } else{
+            List<Token> list = this.tokenRepository.checkInUser(id);
+            if(!list.isEmpty()){
+                if(!check){
+                    throw new CustomException.NotImplementedException("This user contains token", 501, new Date());
+                } else {
+                    this.tokenRepository.deleteAll(list);
+                }
+            } else {
+                this.userRepository.delete(user);
+            }
+        }
     }
 
     @Override
-    public Page<User> search(String keyWord, Integer pageNo, Integer pageSize) {
-        List<User> list = this.search(keyWord);
-        Pageable pageable = PageRequest.of(pageNo-1, pageSize);
-        int start = (int) pageable.getOffset();
-        int end = pageable.getOffset() + pageable.getPageSize() > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-        list = list.subList(start, end);
-        return new PageImpl<User>(list, pageable, list.size());
+    public UserDTO findByEmail(String email) {
+        User user = this.userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            return modelMapper.map(user, UserDTO.class);
+        } else {
+            throw new CustomException.NotFoundException("User not found with email : " + email , 404, new Date());
+        }
     }
 
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return this.userRepository.findByEmail(email);
+    private void checkUnique(String email){
+        Optional<User> foundUser = this.userRepository.findByEmail(email);
+        if (foundUser.isEmpty()) {
+            throw  new CustomException.NotImplementedException("Email already taken", 501, new Date());
+        }
     }
-
 }

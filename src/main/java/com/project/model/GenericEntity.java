@@ -22,7 +22,7 @@ public class GenericEntity implements Serializable {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Boolean deletedAt = false;
 
     public GenericEntity() {
         this.createdAt = LocalDateTime.now();

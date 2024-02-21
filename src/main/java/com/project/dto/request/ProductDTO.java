@@ -1,4 +1,4 @@
-package com.project.dto;
+package com.project.dto.request;
 
 import com.project.model.*;
 import jakarta.validation.constraints.NotEmpty;
@@ -13,6 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductDTO {
+    private Integer id;
     @NotEmpty(message = "Product name is required")
     private String name;
     @NotNull(message = "Product price is required")
@@ -22,6 +23,8 @@ public class ProductDTO {
     private String image;
     private Integer status;
     private String description;
+    private Category category;
+    private Item item;
     @NotNull(message = "Category is required")
     private Integer categoryId;
     @NotNull(message = "Item is required")

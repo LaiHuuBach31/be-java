@@ -1,6 +1,6 @@
 package com.project.service;
 
-import com.project.model.Size;
+import com.project.dto.request.SizeDTO;
 
-public interface SizeService extends Generic<Size, Integer>{
+public interface SizeService extends Generic<SizeDTO, SizeDTO>{
 }

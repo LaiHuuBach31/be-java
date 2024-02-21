@@ -24,7 +24,7 @@ public class Size extends GenericEntity{
 //    @OneToMany(mappedBy = "size")
 //    @JsonIgnore
 //    private Set<CartVariant> sizes;
-    @OneToMany(mappedBy = "size")
-    @JsonIgnore
-    private Set<Cart> sizes;
+//    @OneToMany(mappedBy = "size")
+//    @JsonIgnore
+//    private Set<Cart> sizes;
 }

@@ -21,7 +21,7 @@ public class FileUploadController {
     private final StorageService storageService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Result> uploadFile(@RequestParam("files") MultipartFile file) {
+    public ResponseEntity<Result> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             String generatedFileName = storageService.storeFile(file);
             return ResponseEntity.status(HttpStatus.OK)

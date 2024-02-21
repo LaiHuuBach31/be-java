@@ -1,44 +1,67 @@
 package com.project.exception;
 
 import com.project.exception.base.CustomException;
+import com.project.exception.base.ErrorModel;
+import com.project.exception.base.ErrorResponseModel;
+import com.project.exception.base.ErrorResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @RestControllerAdvice
-@ControllerAdvice
-public class ExceptionHandlerAdvice {
+public class GlobalExceptionHandler {
+    @ExceptionHandler(CustomException.BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponseException> handleBadRequestException(CustomException ex) {
+        ErrorResponseException response = new ErrorResponseException(ex.getStatus(), ex.getMessage(), ex.getTime());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 
-//    @ExceptionHandler(value = NoCategoryFoundException.class)
-//    @ResponseStatus(HttpStatus.NOT_FOUND)
-//    public ResponseEntity<ErrorResponse> handleNoCategoryException(){
-//        return new ResponseEntity<ErrorResponse>(new ErrorResponse(404, "Category not found", new Date()), HttpStatus.NOT_FOUND);
-//    }
-//
-//    @ExceptionHandler(CustomException.BadRequestException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ResponseEntity<ErrorResponse> handleBadRequestException() {
-//        ErrorResponse response = new ErrorResponse(400, "Internal Server Error", new Date());
-//        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//    }
-//
-//    @ExceptionHandler(CustomException.NotFoundException.class)
-//    @ResponseStatus(HttpStatus.NOT_FOUND)
-//    public ResponseEntity<ErrorResponse> handleNotFoundException() {
-//        ErrorResponse response = new ErrorResponse(404, "Internal Server Error", new Date());
-//        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-//    }
-//
-//    @ExceptionHandler(RuntimeException.class)
-//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    public ResponseEntity<ErrorResponse> handleGenericException() {
-//        ErrorResponse response = new ErrorResponse(500, "Internal Server Error", new Date());
-//        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
+    @ExceptionHandler(CustomException.NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponseException> handleNotFoundException(CustomException ex) {
+        ErrorResponseException response = new ErrorResponseException(ex.getStatus(), ex.getMessage(), ex.getTime());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CustomException.NotImplementedException.class)
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
+    public ResponseEntity<ErrorResponseException> handleNotImplementedException(CustomException ex) {
+        ErrorResponseException response = new ErrorResponseException(ex.getStatus(), ex.getMessage(), ex.getTime());
+        return new ResponseEntity<>(response, HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponseModel handleValidatorException(MethodArgumentNotValidException e) {
+        List<ErrorModel> errorModels = processErrors(e);
+        return ErrorResponseModel
+                .builder()
+                .message("Validation Failed")
+                .errorModels(errorModels)
+                .build();
+    }
+
+    private List<ErrorModel> processErrors(MethodArgumentNotValidException e) {
+            List<ErrorModel> validationErrorModels = new ArrayList<>();
+        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
+            ErrorModel validationErrorModel = ErrorModel
+                    .builder()
+                    .code(fieldError.getCode())
+                    .detail(fieldError.getDefaultMessage())
+                    .build();
+            validationErrorModels.add(validationErrorModel);
+        }
+        return validationErrorModels;
+    }
 
 }

@@ -8,8 +8,8 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResponseErrorException {
-    private int code;
+public class ErrorResponseException {
+    private int status;
     private String message;
     private Date time;
 }

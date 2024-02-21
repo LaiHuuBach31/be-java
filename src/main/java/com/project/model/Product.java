@@ -32,16 +32,16 @@ public class Product extends GenericEntity{
     @ManyToOne
     @JoinColumn(name = "itemId",referencedColumnName = "id")
     private Item item;
-    @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Set<Image> images;
-    @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Set<VariantProduct> productAttr;
 //    @OneToMany(mappedBy = "product")
 //    @JsonIgnore
 //    private Set<Cart> carts;
-    @OneToMany(mappedBy = "product")
-    private Set<OrderDetail> productOrder;
+//    @OneToMany(mappedBy = "product")
+//    private Set<OrderDetail> productOrder;
 
 }

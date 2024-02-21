@@ -1,4 +1,4 @@
-package com.project.dto;
+package com.project.dto.request;
 
 import com.project.model.Product;
 import jakarta.validation.constraints.NotEmpty;

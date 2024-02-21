@@ -2,17 +2,24 @@ package com.project.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.config.JwtService;
+import com.project.dto.UserDTO;
+import com.project.dto.request.TokenDTO;
+import com.project.exception.base.CustomException;
 import com.project.model.*;
 import com.project.service.TokenService;
 import com.project.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +30,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final ModelMapper modelMapper;
 
     public AuthenticationResponse register(RegisterRequest request) {
         User user = User.builder()
@@ -37,14 +45,14 @@ public class AuthenticationService {
                 .enabled(1)
                 .role(Role.USER)
                 .build();
-        var savedUser = userService.saveOrUpdate(user);
+        UserDTO savedUser = userService.save(modelMapper.map(user, UserDTO.class));
         CustomUserDetails userDetails = convertToCustomerUserDetails(user);
         var jwtToken = jwtService.generateToken(userDetails);
         var refreshToken = jwtService.generateRefreshToken(userDetails);
-        saveUserToken(savedUser, jwtToken);
+//        saveUserToken(modelMapper.map(savedUser, User.class), jwtToken);
         return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
+                .accessToken(null)
+                .refreshToken(null)
                 .build();
     }
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -54,12 +62,12 @@ public class AuthenticationService {
                         request.getPassword()
                 )
         );
-        var user = userService.findByEmail(request.getEmail()).orElseThrow();
-        CustomUserDetails userDetails = convertToCustomerUserDetails(user);
+        var user = userService.findByEmail(request.getEmail());
+        CustomUserDetails userDetails = convertToCustomerUserDetails(modelMapper.map(user, User.class));
         var jwtToken = jwtService.generateToken(userDetails);
         var refreshToken = jwtService.generateRefreshToken(userDetails);
-        revokeAllUserTokens(user);
-        saveUserToken(user, jwtToken);
+        revokeAllUserTokens(modelMapper.map(user, User.class));
+        saveUserToken(modelMapper.map(user, User.class), refreshToken);
 
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
@@ -75,7 +83,7 @@ public class AuthenticationService {
                 .expired(false)
                 .revoked(false)
                 .build();
-        tokenService.saveOrUpdate(token);
+        tokenService.save(modelMapper.map(token, TokenDTO.class));
     }
 
     private void revokeAllUserTokens(User user) {
@@ -99,18 +107,19 @@ public class AuthenticationService {
             return;
         }
         refreshToken = authHeader.substring(7);
+        String checkToken = tokenService.findByToken(refreshToken).toString();
         userEmail = jwtService.extractUsername(refreshToken);
-        if (userEmail != null) {
-            var user = userService.findByEmail(userEmail)
-                    .orElseThrow();
-            CustomUserDetails userDetails = convertToCustomerUserDetails(user);
+        if (userEmail != null && checkToken.isEmpty()) {
+            var user = userService.findByEmail(userEmail);
+            CustomUserDetails userDetails = convertToCustomerUserDetails(modelMapper.map(user, User.class));
             if (jwtService.isTokenValid(refreshToken, userDetails)) {
                 var accessToken = jwtService.generateToken(userDetails);
-                revokeAllUserTokens(user);
-                saveUserToken(user, accessToken);
+                var newRefreshToken = jwtService.generateRefreshToken(userDetails);
+                revokeAllUserTokens(modelMapper.map(user, User.class));
+                saveUserToken(modelMapper.map(user, User.class), accessToken);
                 var authResponse = AuthenticationResponse.builder()
                         .accessToken(accessToken)
-                        .refreshToken(refreshToken)
+                        .refreshToken(newRefreshToken)
                         .build();
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }

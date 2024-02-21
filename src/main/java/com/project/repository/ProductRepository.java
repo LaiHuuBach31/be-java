@@ -15,7 +15,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Product> listByName(String name);
 
-    @Modifying
-    @Query( "DELETE  FROM Product p WHERE p.category.id = :categoryId")
-    void deleteByCategory(Integer categoryId);
+    @Query( "SELECT p FROM Product p WHERE p.category.id = :categoryId")
+    List<Product> checkInCategory(Integer categoryId);
+
+    @Query( "SELECT p FROM Product p WHERE p.item.id = :itemId")
+    List<Product> checkInItem(Integer itemId);
+
 }

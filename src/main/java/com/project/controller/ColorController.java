@@ -1,7 +1,6 @@
 package com.project.controller;
 
-import com.project.dto.ColorDTO;
-import com.project.model.Color;
+import com.project.dto.request.ColorDTO;
 import com.project.model.Result;
 import com.project.service.ColorService;
 import jakarta.validation.Valid;
@@ -11,12 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,82 +23,37 @@ public class ColorController {
 
     @GetMapping(value = "")
     public ResponseEntity<Result> getAllColor(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<Color> listColor = colorService.pagination(pageNo, 5);
-        if(keyword != null){
-            listColor = this.colorService.search(keyword, pageNo, 5);
-        }
-        if (!listColor.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new Result(200, "Query list colors successfully", listColor));
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new Result(404, "No colors found", null));
-        }
+        Page<ColorDTO> listColor = colorService.getAll(keyword, pageNo, 2);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list color successfully", listColor));
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<Result> getById(@PathVariable Integer id) {
+        ColorDTO colorDto = colorService.findById(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query color by id successfully", colorDto));
     }
 
     @PostMapping(value = "")
-    public ResponseEntity<Result> insertColor(@Valid @RequestBody ColorDTO newColor,
-                                                 BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            List<String> errorMessages = errors.stream()
-                    .map(FieldError::getDefaultMessage)
-                    .collect(Collectors.toList());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Result(400, "Validation failed", errorMessages));
-        }
-        List<Color> foundColor = colorService.findByName(newColor.getName().trim());
-        if (!foundColor.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                    .body(new Result(501, "Color name already taken", ""));
-        }
-        Color colorRequest = modelMapper.map(newColor, Color.class);
-        Color color = colorService.saveOrUpdate(colorRequest);
-        ColorDTO colorResponse = modelMapper.map(color, ColorDTO.class);
+    public ResponseEntity<Result> insertColor(@Valid @RequestBody ColorDTO newColor) {
+        ColorDTO colorDto = colorService.save(newColor);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Insert color successfully", colorResponse));
+                .body(new Result(200, "Insert color successfully", colorDto));
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<Result> updateColor(@Valid @RequestBody ColorDTO newColor,
-                                                 BindingResult bindingResult, @PathVariable Integer id) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            List<String> errorMessages = errors.stream()
-                    .map(FieldError::getDefaultMessage)
-                    .collect(Collectors.toList());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Result(400, "Validation failed", errorMessages));
-        }
-        List<Color> foundColor = colorService.findByName(newColor.getName().trim());
-        if (!foundColor.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                    .body(new Result(501, "Color name already taken", ""));
-        }
-        Color updateColor = colorService.findById(id);
-        if (updateColor != null) {
-            updateColor.setName(newColor.getName());
-            updateColor.setStatus(newColor.getStatus());
-            updateColor = colorService.saveOrUpdate(updateColor);
-        } else {
-            Color colorRequest = modelMapper.map(newColor, Color.class);
-            colorRequest.setId(id);
-            updateColor = colorService.saveOrUpdate(colorRequest);
-        }
-        ColorDTO colorResponse = modelMapper.map(updateColor, ColorDTO.class);
+    public ResponseEntity<Result> updateColor(@Valid @RequestBody ColorDTO newColor, @PathVariable Integer id) {
+        ColorDTO colorDto = colorService.update(newColor, id);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Update color successfully", colorResponse));
+                .body(new Result(200, "Update color successfully", colorDto));
     }
 
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<Result> deleteColor(@PathVariable Integer id) {
-        boolean exists = colorService.existsById(id);
-        if (exists) {
-            colorService.delete(id);
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new Result(200, "Delete color successfully", ""));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new Result(404, "Cannot find color to delete", ""));
+    public ResponseEntity<Result> deleteColor(@PathVariable Integer id, @RequestParam(name="check", defaultValue = "false") boolean check) {
+        this.colorService.delete(id, check);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Delete color successfully", null));
     }
+
 }

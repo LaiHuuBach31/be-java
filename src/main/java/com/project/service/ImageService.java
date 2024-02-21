@@ -1,6 +1,7 @@
 package com.project.service;
 
-import com.project.model.Image;
+import com.project.dto.request.ImageDTO;
+import com.project.dto.response.ImageViewDTO;
 
-public interface ImageService extends Generic<Image, Integer>{
+public interface ImageService extends Generic<ImageDTO, ImageViewDTO>{
 }

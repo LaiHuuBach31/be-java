@@ -24,7 +24,7 @@ public class Color extends GenericEntity{
 //    @OneToMany(mappedBy = "color")
 //    @JsonIgnore
 //    private Set<CartVariant> colors;
-    @OneToMany(mappedBy = "color")
-    @JsonIgnore
-    private Set<Cart> colors;
+//    @OneToMany(mappedBy = "color")
+//    @JsonIgnore
+//    private Set<Cart> colors;
 }

@@ -1,8 +1,8 @@
 package com.project.service;
 
-import com.project.model.Category;
-import com.project.model.Product;
+import com.project.dto.request.ProductDTO;
+import com.project.dto.response.ProductViewDTO;
 
-public interface ProductService extends Generic<Product, Integer>{
-    void deleteByCategory(Integer categoryId);
+public interface ProductService extends Generic<ProductDTO, ProductViewDTO>{
+
 }

@@ -1,4 +1,4 @@
-package com.project.dto;
+package com.project.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.model.*;
@@ -12,6 +12,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductViewDTO {
+    private Integer id;
     private String name;
     private Float price;
     private Integer discount;
