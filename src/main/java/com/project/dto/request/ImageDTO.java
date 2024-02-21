@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageDTO {
+    private Integer id;
     @NotEmpty(message = "Image name is required")
     private String name;
     private Product product;

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImageViewDTO {
+    private Integer id;
     private String name;
     private Product product;
 }
