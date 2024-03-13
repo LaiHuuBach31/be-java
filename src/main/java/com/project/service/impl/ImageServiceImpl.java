@@ -1,5 +1,6 @@
 package com.project.service.impl;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ImageDTO;
 import com.project.dto.response.ImageViewDTO;
 import com.project.dto.response.ProductViewDTO;
@@ -30,6 +31,13 @@ public class ImageServiceImpl implements ImageService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<ImageViewDTO> getAll() {
+        return this.imageRepository.findAll().stream()
+                .map(image -> modelMapper.map(image, ImageViewDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<ImageViewDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Image> images;
         Pageable pageable;
@@ -42,14 +50,13 @@ public class ImageServiceImpl implements ImageService {
             int start = (int) pageable.getOffset();
             int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
             list = list.subList(start, end);
-            images = new PageImpl<>(list, pageable, list.size());
+            images = new PageImpl<>(list, pageable, this.imageRepository.listByName(keyword).size());
         }
         if (!images.isEmpty()) {
             List<ImageViewDTO> imageDtoList = images.getContent()
                     .stream()
                     .map(image -> modelMapper.map(image, ImageViewDTO.class))
                     .collect(Collectors.toList());
-
             return new PageImpl<>(imageDtoList, pageable, images.getTotalElements());
         }
         return null;

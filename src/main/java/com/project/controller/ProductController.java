@@ -1,6 +1,7 @@
 package com.project.controller;
 
 
+import com.project.dto.request.ItemDTO;
 import com.project.dto.request.ProductDTO;
 import com.project.dto.response.ProductViewDTO;
 import com.project.model.Result;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/product")
@@ -20,11 +23,23 @@ public class ProductController {
 
     private final ProductService productService;
 
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllItem() {
+        List<ProductViewDTO> listItem = productService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list item successfully", listItem));
+    }
     @GetMapping()
     public ResponseEntity<Result> getAllProduct(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<ProductViewDTO> listProduct = productService.getAll(keyword, pageNo, 100);
+        Page<ProductViewDTO> listProduct = productService.getAll(keyword, pageNo, 8);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query list product successfully", listProduct));
+    }
+    @GetMapping("/filter")
+    public ResponseEntity<Result> filterByCategory(@Param("categoryId") Integer categoryId,@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
+        Page<ProductViewDTO> listProduct = productService.filter(categoryId, pageNo, 8);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list product by category successfully", listProduct));
     }
     @GetMapping(value = "/{id}")
     public ResponseEntity<Result> getById(@PathVariable Integer id) {

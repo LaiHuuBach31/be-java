@@ -1,5 +1,6 @@
 package com.project.service.impl;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ItemDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Category;
@@ -29,6 +30,13 @@ public class ItemServiceImpl implements ItemService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<ItemDTO> getAll() {
+        return this.itemRepository.findAll().stream()
+                .map(item -> modelMapper.map(item, ItemDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<ItemDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Item> items;
         Pageable pageable;
@@ -37,11 +45,15 @@ public class ItemServiceImpl implements ItemService {
             items = this.itemRepository.findAll(pageable);
         } else {
             List<Item> list = this.itemRepository.listByName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            items = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("Item not found with name : " + keyword, 404, new Date());
+            } else {
+                pageable = PageRequest.of(pageNo - 1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                items = new PageImpl<>(list, pageable, this.itemRepository.listByName(keyword).size());
+            }
         }
         if (!items.isEmpty()) {
             List<ItemDTO> itemDTOList = items.getContent()

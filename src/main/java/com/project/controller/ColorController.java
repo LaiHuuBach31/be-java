@@ -1,5 +1,6 @@
 package com.project.controller;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ColorDTO;
 import com.project.model.Result;
 import com.project.service.ColorService;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -19,11 +22,17 @@ import org.springframework.web.bind.annotation.*;
 public class ColorController {
 
     private final ColorService colorService;
-    private final ModelMapper modelMapper;
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllCategory() {
+        List<ColorDTO> listColor = colorService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list color successfully", listColor));
+    }
 
     @GetMapping(value = "")
     public ResponseEntity<Result> getAllColor(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<ColorDTO> listColor = colorService.getAll(keyword, pageNo, 2);
+        Page<ColorDTO> listColor = colorService.getAll(keyword, pageNo, 10);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query list color successfully", listColor));
     }

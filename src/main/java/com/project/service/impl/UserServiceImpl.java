@@ -1,8 +1,7 @@
 package com.project.service.impl;
 
-import com.project.dto.UserDTO;
+import com.project.dto.request.UserDTO;
 import com.project.exception.base.CustomException;
-import com.project.model.Product;
 import com.project.model.Token;
 import com.project.model.User;
 import com.project.repository.TokenRepository;
@@ -32,6 +31,13 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    public List<UserDTO> getAll() {
+        return this.userRepository.findAll().stream()
+                .map(user -> modelMapper.map(user, UserDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<UserDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<User> users;
         Pageable pageable;
@@ -40,11 +46,16 @@ public class UserServiceImpl implements UserService {
             users = this.userRepository.findAll(pageable);
         } else {
             List<User> list = this.userRepository.listByFullName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            users = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("User not found with name : " + keyword, 404, new Date());
+            } else{
+                pageable = PageRequest.of(pageNo-1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                users = new PageImpl<>(list, pageable, this.userRepository.listByFullName(keyword).size());
+            }
+
         }
         if (!users.isEmpty()) {
             List<UserDTO> userDtoList = users.getContent()
@@ -132,7 +143,7 @@ public class UserServiceImpl implements UserService {
 
     private void checkUnique(String email){
         Optional<User> foundUser = this.userRepository.findByEmail(email);
-        if (foundUser.isEmpty()) {
+        if (foundUser.isPresent()) {
             throw  new CustomException.NotImplementedException("Email already taken", 501, new Date());
         }
     }

@@ -1,5 +1,6 @@
 package com.project.controller;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ItemDTO;
 import com.project.model.Result;
 import com.project.service.ItemService;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +22,13 @@ import org.springframework.web.bind.annotation.*;
 public class ItemController {
 
     private final ItemService itemService;
-    private final ModelMapper modelMapper;
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllItem() {
+        List<ItemDTO> listItem = itemService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list item successfully", listItem));
+    }
 
     @GetMapping(value = "")
     public ResponseEntity<Result> getAllItem(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {

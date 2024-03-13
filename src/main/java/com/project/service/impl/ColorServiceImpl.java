@@ -1,6 +1,7 @@
 package com.project.service.impl;
 
 import com.project.dto.request.ColorDTO;
+import com.project.dto.response.ProductViewDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Category;
 import com.project.model.Color;
@@ -31,6 +32,13 @@ public class ColorServiceImpl implements ColorService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<ColorDTO> getAll() {
+        return this.colorRepository.findAll().stream()
+                .map(item -> modelMapper.map(item, ColorDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<ColorDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Color> colors;
         Pageable pageable;
@@ -39,11 +47,15 @@ public class ColorServiceImpl implements ColorService {
             colors = this.colorRepository.findAll(pageable);
         } else {
             List<Color> list = this.colorRepository.listByName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            colors = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("Color not found with name : " + keyword, 404, new Date());
+            } else{
+                pageable = PageRequest.of(pageNo-1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                colors = new PageImpl<>(list, pageable, this.colorRepository.listByName(keyword).size());
+            }
         }
         if (!colors.isEmpty()) {
             List<ColorDTO> colorDtoList = colors.getContent()
@@ -51,7 +63,7 @@ public class ColorServiceImpl implements ColorService {
                     .map(color -> modelMapper.map(color, ColorDTO.class))
                     .collect(Collectors.toList());
 
-            return new PageImpl<>(colorDtoList, pageable, colors.getTotalElements());
+            return new PageImpl<>(colorDtoList, pageable, this.colorRepository.listByName(keyword).size());
         }
         return null;
     }

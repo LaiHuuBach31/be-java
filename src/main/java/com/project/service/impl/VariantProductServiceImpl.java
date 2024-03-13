@@ -35,6 +35,11 @@ public class VariantProductServiceImpl implements VariantProductService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<VariantProductViewDTO> getAll() {
+        return null;
+    }
+
+    @Override
     public Page<VariantProductViewDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNo-1, pageSize);
         Page<VariantProduct> variantProducts = this.variantProductRepository.findAll(pageable);

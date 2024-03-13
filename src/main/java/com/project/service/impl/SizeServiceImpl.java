@@ -1,5 +1,6 @@
 package com.project.service.impl;
 
+import com.project.dto.request.ColorDTO;
 import com.project.dto.request.SizeDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Size;
@@ -28,6 +29,13 @@ public class SizeServiceImpl implements SizeService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<SizeDTO> getAll() {
+        return this.sizeRepository.findAll().stream()
+                .map(size -> modelMapper.map(size, SizeDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<SizeDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Size> sizes;
         Pageable pageable;
@@ -36,11 +44,15 @@ public class SizeServiceImpl implements SizeService {
             sizes = this.sizeRepository.findAll(pageable);
         } else {
             List<Size> list = this.sizeRepository.listByName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            sizes = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("Size not found with name : " + keyword, 404, new Date());
+            } else {
+                pageable = PageRequest.of(pageNo-1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                sizes = new PageImpl<>(list, pageable, this.sizeRepository.listByName(keyword).size());
+            }
         }
         if (!sizes.isEmpty()) {
             List<SizeDTO> sizeDtoList = sizes.getContent()

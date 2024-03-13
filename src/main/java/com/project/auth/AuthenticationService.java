@@ -2,9 +2,8 @@ package com.project.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.config.JwtService;
-import com.project.dto.UserDTO;
 import com.project.dto.request.TokenDTO;
-import com.project.exception.base.CustomException;
+import com.project.dto.request.UserDTO;
 import com.project.model.*;
 import com.project.service.TokenService;
 import com.project.service.UserService;
@@ -15,7 +14,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

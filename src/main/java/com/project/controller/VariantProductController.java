@@ -21,7 +21,7 @@ public class VariantProductController {
 
     @GetMapping(value = "")
     public ResponseEntity<Result> getAllVariantProduct(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<VariantProductViewDTO> listCategory = variantProductService.getAll(keyword, pageNo, 2);
+        Page<VariantProductViewDTO> listCategory = variantProductService.getAll(keyword, pageNo, 10);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query list variant product successfully", listCategory));
     }

@@ -1,6 +1,5 @@
-package com.project.dto;
+package com.project.dto.request;
 
-import com.project.model.Cart;
 import com.project.model.Role;
 import com.project.model.Token;
 import jakarta.validation.constraints.NotEmpty;

@@ -1,12 +1,8 @@
 package com.project.service.impl;
 
-import com.project.dto.UserDTO;
 import com.project.dto.request.TokenDTO;
-import com.project.dto.response.VariantProductViewDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Token;
-import com.project.model.User;
-import com.project.model.VariantProduct;
 import com.project.repository.TokenRepository;
 import com.project.service.TokenService;
 import com.project.service.UserService;
@@ -31,6 +27,13 @@ public class TokenServiceImpl implements TokenService {
     private final TokenRepository tokenRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
+
+    @Override
+    public List<TokenDTO> getAll() {
+        return this.tokenRepository.findAll().stream()
+                .map(token -> modelMapper.map(token, TokenDTO.class))
+                .collect(Collectors.toList());
+    }
 
     @Override
     public Page<TokenDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {

@@ -34,6 +34,13 @@ public class ProductServiceImpl implements ProductService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<ProductViewDTO> getAll() {
+        return this.productRepository.findAll().stream()
+                .map(item -> modelMapper.map(item, ProductViewDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<ProductViewDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Product> products;
         Pageable pageable;
@@ -42,11 +49,15 @@ public class ProductServiceImpl implements ProductService {
             products = this.productRepository.findAll(pageable);
         } else {
             List<Product> list = this.productRepository.listByName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            products = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("Product not found with name : " + keyword, 404, new Date());
+            } else{
+                pageable = PageRequest.of(pageNo-1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                products = new PageImpl<>(list, pageable, this.productRepository.listByName(keyword).size());
+            }
         }
         if (!products.isEmpty()) {
             List<ProductViewDTO> productDtoList = products.getContent()
@@ -135,5 +146,30 @@ public class ProductServiceImpl implements ProductService {
         if (!foundProduct.isEmpty()) {
             throw  new CustomException.NotImplementedException("Product name already taken", 501, new Date());
         }
+    }
+    @Override
+    public Page<ProductViewDTO> filter(Integer categoryId, Integer pageNo, Integer pageSize){
+        Page<Product> products;
+        Pageable pageable;
+        List<Product> list = this.productRepository.findByCategory(categoryId);
+        if(list.isEmpty()){
+            return  null;
+        } else{
+            pageable = PageRequest.of(pageNo-1, pageSize);
+            int start = (int) pageable.getOffset();
+            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+            list = list.subList(start, end);
+            products = new PageImpl<>(list, pageable, this.productRepository.findByCategory(categoryId).size());
+        }
+
+        if (!products.isEmpty()) {
+            List<ProductViewDTO> productDtoList = products.getContent()
+                    .stream()
+                    .map(product -> modelMapper.map(product, ProductViewDTO.class))
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(productDtoList, pageable, products.getTotalElements());
+        }
+        return null;
     }
 }

@@ -1,7 +1,6 @@
 package com.project.controller;
 
-import com.project.dto.UserDTO;
-import com.project.dto.request.CategoryDTO;
+import com.project.dto.request.UserDTO;
 import com.project.model.Result;
 import com.project.service.UserService;
 import jakarta.validation.Valid;
@@ -13,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/user")
@@ -21,6 +22,12 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllUser() {
+        List<UserDTO> listUser = userService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list user successfully", listUser));
+    }
     @GetMapping(value = "")
     @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<Result> getAllUser(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {

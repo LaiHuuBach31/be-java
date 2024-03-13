@@ -3,6 +3,7 @@ package com.project.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.Date;
 import java.util.Set;
@@ -14,6 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
+@DynamicUpdate
 public class User extends GenericEntity{
     @Column(name = "firstname")
     private String firstName;

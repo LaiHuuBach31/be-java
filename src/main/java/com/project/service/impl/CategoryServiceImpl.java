@@ -30,6 +30,12 @@ public class CategoryServiceImpl implements CategoryService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<CategoryDTO> getAll() {
+        return this.categoryRepository.findAll().stream()
+                .map(category -> modelMapper.map(category, CategoryDTO.class))
+                .collect(Collectors.toList());
+    }
+    @Override
     public Page<CategoryDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Page<Category> categories;
         Pageable pageable;
@@ -38,11 +44,15 @@ public class CategoryServiceImpl implements CategoryService {
             categories = this.categoryRepository.findAll(pageable);
         } else {
             List<Category> list = this.categoryRepository.listByName(keyword);
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            categories = new PageImpl<>(list, pageable, list.size());
+            if(list.isEmpty()){
+                throw new CustomException.NotFoundException("Category not found with name : " + keyword, 404, new Date());
+            } else{
+                pageable = PageRequest.of(pageNo-1, pageSize);
+                int start = (int) pageable.getOffset();
+                int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
+                list = list.subList(start, end);
+                categories = new PageImpl<>(list, pageable, this.categoryRepository.listByName(keyword).size());
+            }
         }
         if (!categories.isEmpty()) {
             List<CategoryDTO> categoryDtoList = categories.getContent()
@@ -109,7 +119,6 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
     }
-
 
     private void checkUnique(String name){
         List<Category> foundCategory = this.categoryRepository.findByName(name);

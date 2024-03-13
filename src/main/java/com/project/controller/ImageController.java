@@ -1,5 +1,6 @@
 package com.project.controller;
 
+import com.project.dto.request.ColorDTO;
 import com.project.dto.request.ImageDTO;
 import com.project.dto.response.ImageViewDTO;
 import com.project.model.*;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/image")
@@ -19,9 +22,16 @@ public class ImageController {
 
     private final ImageService imageService;
 
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllCategory() {
+        List<ImageViewDTO> listColor = imageService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list image successfully", listColor));
+    }
+
     @GetMapping(value = "")
     public ResponseEntity<Result> getAllImage(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<ImageViewDTO> listImage = imageService.getAll(keyword, pageNo, 2);
+        Page<ImageViewDTO> listImage = imageService.getAll(keyword, pageNo, 10);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query list image successfully", listImage));
     }

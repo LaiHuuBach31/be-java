@@ -15,12 +15,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/category")
 public class CategoryController {
 
     private final CategoryService categoryService;
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllCategory() {
+        List<CategoryDTO> listCategory = categoryService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list category successfully", listCategory));
+    }
 
     @Operation(summary = "Get all categories")
     @ApiResponses(value = {

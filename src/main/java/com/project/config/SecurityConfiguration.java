@@ -36,6 +36,7 @@ import static com.project.model.Permission.MANAGER_DELETE;
 public class SecurityConfiguration {
     private static final String[] WHITE_LIST_URL = {
             "/api/v1/auth/**",
+            "/api/v1/file/files/**",
             "/swagger-ui.html"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;

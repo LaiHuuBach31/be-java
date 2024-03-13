@@ -1,6 +1,7 @@
 package com.project.controller;
 
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.SizeDTO;
 import com.project.model.Result;
 import com.project.service.SizeService;
@@ -12,19 +13,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/size")
 public class SizeController {
     private final SizeService sizeService;
 
-    @GetMapping(value = "")
-    public ResponseEntity<Result> getAllSize(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<SizeDTO> listSize = sizeService.getAll(keyword, pageNo, 2);
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllSize() {
+        List<SizeDTO> listSize = sizeService.getAll();
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query list size successfully", listSize));
     }
-
+    @GetMapping(value = "")
+    public ResponseEntity<Result> getAllSize(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
+        Page<SizeDTO> listSize = sizeService.getAll(keyword, pageNo, 10);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list size successfully", listSize));
+    }
+    @GetMapping(value = "/{id}")
     public ResponseEntity<Result> getById(@PathVariable Integer id) {
         SizeDTO sizeDto = sizeService.findById(id);
         return ResponseEntity.status(HttpStatus.OK)
