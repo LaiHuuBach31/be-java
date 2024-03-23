@@ -70,10 +70,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findById(Integer id) {
-        User user = this.userRepository.findById(id).orElse(null);
-        if(user == null) {
-            throw new CustomException.NotFoundException("User not found with id : " + id, 404, new Date());
-        }
+        User user = this.userRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("User not found with id : " + id, 404, new Date()));
         return modelMapper.map(user, UserDTO.class);
     }
 
@@ -114,31 +111,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        User user = this.userRepository.findById(id).orElse(null);
-        if(user == null) {
-            throw new CustomException.NotFoundException("User not found with id : " + id, 404, new Date());
-        } else{
-            List<Token> list = this.tokenRepository.checkInUser(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This user contains token", 501, new Date());
-                } else {
-                    this.tokenRepository.deleteAll(list);
-                }
+        User user = this.userRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("User not found with id : " + id, 404, new Date()));
+        List<Token> list = this.tokenRepository.checkInUser(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This user contains token", 501, new Date());
             } else {
-                this.userRepository.delete(user);
+                this.tokenRepository.deleteAll(list);
             }
+        } else {
+            this.userRepository.delete(user);
         }
     }
 
     @Override
     public UserDTO findByEmail(String email) {
-        User user = this.userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
-            return modelMapper.map(user, UserDTO.class);
-        } else {
-            throw new CustomException.NotFoundException("User not found with email : " + email , 404, new Date());
-        }
+        User user = this.userRepository.findByEmail(email).orElseThrow(()->new CustomException.NotFoundException("User not found with email : " + email , 404, new Date()));
+        return modelMapper.map(user, UserDTO.class);
     }
 
     private void checkUnique(String email){

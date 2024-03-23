@@ -4,6 +4,7 @@ import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ImageDTO;
 import com.project.dto.response.ImageViewDTO;
 import com.project.dto.response.ProductViewDTO;
+import com.project.dto.response.VariantProductViewDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Image;
 import com.project.model.Product;
@@ -64,10 +65,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public ImageViewDTO findById(Integer id) {
-        Image image = this.imageRepository.findById(id).orElse(null);
-        if(image == null) {
-            throw new CustomException.NotFoundException("Image not found with id : " + id, 404, new Date());
-        }
+        Image image = this.imageRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Image not found with id : " + id, 404, new Date()));
         return modelMapper.map(image, ImageViewDTO.class);
     }
 
@@ -103,11 +101,14 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Image image = this.imageRepository.findById(id).orElse(null);
-        if(image == null) {
-            throw new CustomException.NotFoundException("Image not found with id : " + id, 404, new Date());
-        } else{
-            this.imageRepository.delete(image);
-        }
+        Image image = this.imageRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Image not found with id : " + id, 404, new Date()));
+        this.imageRepository.delete(image);
+    }
+
+    @Override
+    public List<ImageViewDTO> listImage(Integer id) {
+        return this.imageRepository.checkInProduct(id).stream()
+                .map(v -> modelMapper.map(v, ImageViewDTO.class))
+                .collect(Collectors.toList());
     }
 }

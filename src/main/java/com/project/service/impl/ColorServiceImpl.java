@@ -1,5 +1,6 @@
 package com.project.service.impl;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ColorDTO;
 import com.project.dto.response.ProductViewDTO;
 import com.project.exception.base.CustomException;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,8 +98,11 @@ public class ColorServiceImpl implements ColorService {
 
     @Override
     public ColorDTO update(ColorDTO colorDto, Integer id) {
-        this.checkUnique(colorDto.getName().trim());
-        Color color = modelMapper.map(this.findById(id), Color.class);
+        ColorDTO c = this.findById(id);
+        if(!Objects.equals(c.getName(), colorDto.getName())){
+            throw  new CustomException.NotImplementedException("Color name already taken", 501, new Date());
+        }
+        Color color = modelMapper.map(c, Color.class);
         color.setName(colorDto.getName());
         color.setStatus(colorDto.getStatus());
         color = this.colorRepository.save(color);
@@ -106,20 +111,16 @@ public class ColorServiceImpl implements ColorService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Color color = this.colorRepository.findById(id).orElse(null);
-        if(color == null) {
-            throw new CustomException.NotFoundException("Color not found with id : " + id, 404, new Date());
-        } else{
-            List<VariantProduct> list = this.variantProductRepository.checkInColor(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This color contains in variant product", 501, new Date());
-                } else {
-                    this.variantProductRepository.deleteAll(list);
-                }
+        Color color = this.colorRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Color not found with id : " + id, 404, new Date()));
+        List<VariantProduct> list = this.variantProductRepository.checkInColor(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This color contains in variant product", 501, new Date());
             } else {
-                this.colorRepository.delete(color);
+                this.variantProductRepository.deleteAll(list);
             }
+        } else {
+            this.colorRepository.delete(color);
         }
     }
 

@@ -14,9 +14,12 @@ public interface VariantProductRepository extends JpaRepository<VariantProduct, 
     @Query("SELECT vp FROM VariantProduct vp WHERE vp.product.id = :productId AND vp.color.id = :colorId AND vp.size.id = :sizeId")
     VariantProduct checkAttributes(Integer productId, Integer colorId, Integer sizeId);
 
-    @Query( "SELECT vp FROM VariantProduct vp WHERE vp.color.id = : colorId")
+    @Query( "SELECT vp FROM VariantProduct vp WHERE vp.color.id = :colorId")
     List<VariantProduct> checkInColor(Integer colorId);
 
-    @Query( "SELECT vp FROM VariantProduct vp WHERE vp.size.id = : sizeId")
+    @Query( "SELECT vp FROM VariantProduct vp WHERE vp.size.id = :sizeId")
     List<VariantProduct> checkInSize(Integer sizeId);
+
+    @Query( "SELECT vp FROM VariantProduct vp WHERE vp.product.id = :productId")
+    List<VariantProduct> getVariantByProduct(Integer productId);
 }

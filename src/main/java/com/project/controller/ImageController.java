@@ -3,6 +3,7 @@ package com.project.controller;
 import com.project.dto.request.ColorDTO;
 import com.project.dto.request.ImageDTO;
 import com.project.dto.response.ImageViewDTO;
+import com.project.dto.response.VariantProductViewDTO;
 import com.project.model.*;
 import com.project.service.ImageService;
 import jakarta.validation.Valid;
@@ -36,7 +37,7 @@ public class ImageController {
                 .body(new Result(200, "Query list image successfully", listImage));
     }
 
-    @GetMapping(value = "/{id}")
+    @GetMapping(value = "/get/{id}")
     public ResponseEntity<Result> getById(@PathVariable Integer id) {
         ImageViewDTO imageDto = imageService.findById(id);
         return ResponseEntity.status(HttpStatus.OK)
@@ -62,5 +63,12 @@ public class ImageController {
         this.imageService.delete(id, check);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Delete image successfully", null));
+    }
+
+    @GetMapping(value = "/list/{id}")
+    public ResponseEntity<Result> listVariant(@PathVariable Integer id) {
+        List<ImageViewDTO>  listImage = imageService.listImage(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query variant product by id successfully", listImage));
     }
 }

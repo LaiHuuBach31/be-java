@@ -1,10 +1,11 @@
 package com.project.controller;
 
 import com.project.dto.request.CartDTO;
-import com.project.dto.CartViewDTO;
+import com.project.dto.response.CartViewDTO;
 import com.project.model.*;
 import com.project.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,16 @@ public class CartController {
     @PutMapping(value = "/{id}")
     public ResponseEntity<Result> updateCart(@RequestBody CartDTO cartItem, @PathVariable Integer id){
         CartViewDTO cartViewDto = cartService.update(cartItem, id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Update cart successfully", cartViewDto));
+    }
+    @PutMapping(value = "/update/{id}")
+    public ResponseEntity<Result> updateCart(
+                                    @Param("quantity") Integer quantity,
+                                    @Param("colorId") Integer colorId,
+                                    @Param("sizeId") Integer sizeId,
+                                    @PathVariable Integer id){
+        CartViewDTO cartViewDto = cartService.update(id, quantity, sizeId, colorId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Update cart successfully", cartViewDto));
     }

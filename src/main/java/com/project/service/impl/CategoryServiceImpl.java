@@ -7,6 +7,7 @@ import com.project.model.Product;
 import com.project.repository.CategoryRepository;
 import com.project.repository.ProductRepository;
 import com.project.service.CategoryService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -67,10 +69,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDTO findById(Integer id) {
-        Category category = this.categoryRepository.findById(id).orElse(null);
-        if(category == null) {
-            throw new CustomException.NotFoundException("Category not found with id : " + id, 404, new Date());
-        }
+        Category category = this.categoryRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Category not found with id : " + id, 404, new Date()));
         return modelMapper.map(category, CategoryDTO.class);
     }
 
@@ -93,8 +92,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDTO update(CategoryDTO categoryDto, Integer id) {
-        this.checkUnique(categoryDto.getName().trim());
-        Category category = modelMapper.map(this.findById(id), Category.class);
+        CategoryDTO c = this.findById(id);
+        if(!Objects.equals(c.getName(), categoryDto.getName())){
+            throw  new CustomException.NotImplementedException("Category name already taken", 501, new Date());
+        }
+        Category category = modelMapper.map(c, Category.class);
         category.setName(categoryDto.getName());
         category.setStatus(categoryDto.getStatus());
         category = this.categoryRepository.save(category);
@@ -103,20 +105,16 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Category category = this.categoryRepository.findById(id).orElse(null);
-        if(category == null) {
-            throw new CustomException.NotFoundException("Category not found with id : " + id, 404, new Date());
-        } else{
-            List<Product> list = this.productRepository.checkInCategory(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This category contains products", 501, new Date());
-                } else {
-                    this.productRepository.deleteAll(list);
-                }
+        Category category = this.categoryRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Category not found with id : " + id, 404, new Date()));
+        List<Product> list = this.productRepository.checkInCategory(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This category contains products", 501, new Date());
             } else {
-                this.categoryRepository.delete(category);
+                this.productRepository.deleteAll(list);
             }
+        } else {
+            this.categoryRepository.delete(category);
         }
     }
 

@@ -3,6 +3,7 @@ package com.project.service.impl;
 import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ItemDTO;
 import com.project.dto.request.ProductDTO;
+import com.project.dto.request.SizeDTO;
 import com.project.dto.response.ProductViewDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.Category;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,12 +73,35 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductViewDTO findById(Integer id) {
-        Product product = this.productRepository.findById(id).orElse(null);
-
-        if(product == null) {
-            throw new CustomException.NotFoundException("Product not found with id : " + id, 404, new Date());
+    public Page<ProductViewDTO> getAll(String keyword, Integer categoryId, Float minPrice, Float maxPrice, Integer color, Integer size, Integer pageNo, Integer pageSize, String sortBy, String sortOrder) {
+        Pageable pageable;
+        Sort.Direction sortDirection = sortOrder.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        if (sortBy == null || sortBy.isEmpty()) {
+            pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by("createdAt").descending());
+        } else {
+            pageable = PageRequest.of(pageNo - 1, pageSize, sortDirection, sortBy);
         }
+
+        Page<Product> products;
+        if (keyword != null || categoryId != null || minPrice != null || maxPrice != null || color != null || size != null) {
+            products = productRepository.filter(keyword, categoryId, minPrice, maxPrice, size, color, pageable);
+        } else {
+            pageable = PageRequest.of(pageNo-1, pageSize, Sort.by("createdAt").descending());
+            products = this.productRepository.findAll(pageable);
+        }
+
+        if (products.isEmpty()) {
+            return null;
+        }
+        List<ProductViewDTO> productDtoList = products.stream()
+                .map(product -> modelMapper.map(product, ProductViewDTO.class))
+                .collect(Collectors.toList());
+        return new PageImpl<>(productDtoList, pageable, products.getTotalElements());
+    }
+
+    @Override
+    public ProductViewDTO findById(Integer id) {
+        Product product = this.productRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Product not found with id : " + id, 404, new Date()));
         return modelMapper.map(product, ProductViewDTO.class);
     }
 
@@ -104,11 +129,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductViewDTO update(ProductDTO productDto, Integer id) {
-        this.checkUnique(productDto.getName().trim());
+        ProductViewDTO p = this.findById(id);
+        if(!Objects.equals(p.getName(), productDto.getName())){
+            throw  new CustomException.NotImplementedException("Product name already taken", 501, new Date());
+        }
         CategoryDTO category = this.categoryService.findById(productDto.getCategoryId());
         ItemDTO item = itemService.findById(productDto.getItemId());
         modelMapper.getConfiguration().setAmbiguityIgnored(true);
-        Product product = modelMapper.map(this.findById(id), Product.class);
+        Product product = modelMapper.map(p, Product.class);
         product.setName(productDto.getName());
         product.setPrice(productDto.getPrice());
         product.setDiscount(productDto.getDiscount());
@@ -123,20 +151,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Product product = this.productRepository.findById(id).orElse(null);
-        if(product == null) {
-            throw new CustomException.NotFoundException("Product not found with id : " + id, 404, new Date());
-        } else{
-            List<Image> list = this.imageRepository.checkInProduct(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This product contains images", 501, new Date());
-                } else {
-                    this.imageRepository.deleteAll(list);
-                }
+        Product product = this.productRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Product not found with id : " + id, 404, new Date()));
+        List<Image> list = this.imageRepository.checkInProduct(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This product contains images", 501, new Date());
             } else {
-                this.productRepository.delete(product);
+                this.imageRepository.deleteAll(list);
             }
+        } else {
+            this.productRepository.delete(product);
         }
 
     }
@@ -172,4 +196,5 @@ public class ProductServiceImpl implements ProductService {
         }
         return null;
     }
+
 }

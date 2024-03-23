@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,10 +68,7 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     public SizeDTO findById(Integer id) {
-        Size size = this.sizeRepository.findById(id).orElse(null);
-        if(size == null) {
-            throw new CustomException.NotFoundException("Size not found with id : " + id, 404, new Date());
-        }
+        Size size = this.sizeRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Size not found with id : " + id, 404, new Date()));
         return modelMapper.map(size, SizeDTO.class);
     }
 
@@ -93,8 +91,11 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     public SizeDTO update(SizeDTO sizeDto, Integer id) {
-        this.checkUnique(sizeDto.getName().trim());
-        Size size = modelMapper.map(this.findById(id), Size.class);
+        SizeDTO s = this.findById(id);
+        if(!Objects.equals(s.getName(), sizeDto.getName())){
+            throw  new CustomException.NotImplementedException("Size name already taken", 501, new Date());
+        }
+        Size size = modelMapper.map(s, Size.class);
         size.setName(sizeDto.getName());
         size.setStatus(sizeDto.getStatus());
         size = this.sizeRepository.save(size);
@@ -103,20 +104,16 @@ public class SizeServiceImpl implements SizeService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Size size = this.sizeRepository.findById(id).orElse(null);
-        if(size == null) {
-            throw new CustomException.NotFoundException("Size not found with id : " + id, 404, new Date());
-        } else{
-            List<VariantProduct> list = this.variantProductRepository.checkInSize(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This size contains in variant product", 501, new Date());
-                } else {
-                    this.variantProductRepository.deleteAll(list);
-                }
+        Size size = this.sizeRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Size not found with id : " + id, 404, new Date()));
+        List<VariantProduct> list = this.variantProductRepository.checkInSize(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This size contains in variant product", 501, new Date());
             } else {
-                this.sizeRepository.delete(size);
+                this.variantProductRepository.deleteAll(list);
             }
+        } else {
+            this.sizeRepository.delete(size);
         }
     }
 

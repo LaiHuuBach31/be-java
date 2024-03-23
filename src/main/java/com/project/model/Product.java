@@ -19,7 +19,7 @@ public class Product extends GenericEntity{
     @Column(name = "price", nullable = false)
     private Float price;
     @Column(name = "discount")
-    private Integer discount;
+    private Integer discount = 0;
     @Column(name = "image", nullable = false)
     private String image;
     @Column(name = "status", nullable = false)

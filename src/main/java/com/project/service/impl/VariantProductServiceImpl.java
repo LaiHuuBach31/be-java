@@ -1,5 +1,6 @@
 package com.project.service.impl;
 
+import com.project.dto.request.CategoryDTO;
 import com.project.dto.request.ColorDTO;
 import com.project.dto.request.SizeDTO;
 import com.project.dto.request.VariantProductDTO;
@@ -36,7 +37,9 @@ public class VariantProductServiceImpl implements VariantProductService {
 
     @Override
     public List<VariantProductViewDTO> getAll() {
-        return null;
+        return this.variantProductRepository.findAll().stream()
+                .map(i -> modelMapper.map(i, VariantProductViewDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -52,10 +55,7 @@ public class VariantProductServiceImpl implements VariantProductService {
 
     @Override
     public VariantProductViewDTO findById(Integer id) {
-        VariantProduct variantProduct = this.variantProductRepository.findById(id).orElse(null);
-        if(variantProduct == null) {
-            throw new CustomException.NotFoundException("Variant Product not found with id : " + id, 404, new Date());
-        }
+        VariantProduct variantProduct = this.variantProductRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Variant Product not found with id : " + id, 404, new Date()));
         return modelMapper.map(variantProduct, VariantProductViewDTO.class);
     }
 
@@ -100,12 +100,14 @@ public class VariantProductServiceImpl implements VariantProductService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        VariantProduct variantProduct = this.variantProductRepository.findById(id).orElse(null);
-        if(variantProduct == null) {
-            throw new CustomException.NotFoundException("Variant Product not found with id : " + id, 404, new Date());
-        } else{
-            this.variantProductRepository.delete(variantProduct);
-        }
+        VariantProduct variantProduct = this.variantProductRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Variant Product not found with id : " + id, 404, new Date()));
+        this.variantProductRepository.delete(variantProduct);
     }
 
+    @Override
+    public List<VariantProductViewDTO> listVariant(Integer id) {
+        return this.variantProductRepository.getVariantByProduct(id).stream()
+                .map(v -> modelMapper.map(v, VariantProductViewDTO.class))
+                .collect(Collectors.toList());
+    }
 }

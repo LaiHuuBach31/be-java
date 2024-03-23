@@ -1,16 +1,16 @@
 package com.project.service.impl;
 
-import com.project.dto.CartViewDTO;
 import com.project.dto.request.CartDTO;
 import com.project.dto.request.ColorDTO;
 import com.project.dto.request.SizeDTO;
 import com.project.dto.request.UserDTO;
+import com.project.dto.response.CartViewDTO;
 import com.project.dto.response.ProductViewDTO;
 import com.project.exception.base.CustomException;
 import com.project.model.*;
 import com.project.repository.CartRepository;
 import com.project.service.*;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -35,22 +35,25 @@ public class CartServiceImpl implements CartService {
     private final ModelMapper modelMapper;
 
     @Override
+    public List<CartViewDTO> getAll(){
+        List<Cart> carts = this.cartRepository.findAll();
+        return carts.stream().map(e -> modelMapper.map(e, CartViewDTO.class)).collect(Collectors.toList());
+    }
+
+    @Override
     public Page<CartViewDTO> getAll(String keyword, Integer pageNo, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNo-1, pageSize);
         Page<Cart> carts = this.cartRepository.findAll(pageable);
-        List<CartViewDTO> variantProductDTOList = carts.getContent()
+        List<CartViewDTO> cartList = carts.getContent()
                 .stream()
                 .map(e -> modelMapper.map(e, CartViewDTO.class))
                 .collect(Collectors.toList());
-        return new PageImpl<>(variantProductDTOList, pageable, carts.getTotalElements());
+        return new PageImpl<>(cartList, pageable, carts.getTotalElements());
     }
 
     @Override
     public CartViewDTO findById(Integer id) {
-        Cart cart = this.cartRepository.findById(id).orElse(null);
-        if(cart == null) {
-            throw new CustomException.NotFoundException("Cart not found with id : " + id, 404, new Date());
-        }
+        Cart cart = this.cartRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Cart not found with id : " + id, 404, new Date()));
         return modelMapper.map(cart, CartViewDTO.class);
     }
 
@@ -96,17 +99,27 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Cart cart = this.cartRepository.findById(id).orElse(null);
-        if(cart == null) {
-            throw new CustomException.NotFoundException("Cart item not found with id : " + id, 404, new Date());
-        } else{
-            this.cartRepository.delete(cart);
-        }
+        Cart cart = this.cartRepository.findById(id).orElseThrow(()-> new CustomException.NotFoundException("Cart item not found with id : " + id, 404, new Date()));
+        this.cartRepository.delete(cart);
     }
+
     @Override
-    public List<CartViewDTO> getAll(){
-        List<Cart> carts = this.cartRepository.findAll();
-        return carts.stream().map(e -> modelMapper.map(e, CartViewDTO.class)).collect(Collectors.toList());
+    public CartViewDTO update(Integer id, Integer quantity, Integer sizeId, Integer colorId) {
+        CartViewDTO c = this.findById(id);
+        Cart cart = null;
+        if(quantity != null){
+            c.setQuantity(quantity);
+            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
+        }
+        if(colorId != null){
+            c.setColor(modelMapper.map(colorService.findById(colorId) ,Color.class));
+            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
+        }
+        if(sizeId != null){
+            c.setSize(modelMapper.map(sizeService.findById(sizeId) ,Size.class));
+            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
+        }
+        return modelMapper.map(cart, CartViewDTO.class);
     }
 
     private CartViewDTO addNewCart(CartDTO cartItem) {

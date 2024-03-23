@@ -68,10 +68,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO findById(Integer id) {
-        Item item = this.itemRepository.findById(id).orElse(null);
-        if(item == null) {
-            throw new CustomException.NotFoundException("Item not found with id : " + id, 404, new Date());
-        }
+        Item item = this.itemRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Item not found with id : " + id, 404, new Date()));
         return modelMapper.map(item, ItemDTO.class);
     }
 
@@ -104,20 +101,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Item item = this.itemRepository.findById(id).orElse(null);
-        if(item == null) {
-            throw new CustomException.NotFoundException("Item not found with id : " + id, 404, new Date());
-        } else{
-            List<Product> list = this.productRepository.checkInItem(id);
-            if(!list.isEmpty()){
-                if(!check){
-                    throw new CustomException.NotImplementedException("This item contains products", 501, new Date());
-                } else {
-                    this.productRepository.deleteAll(list);
-                }
+        Item item = this.itemRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Item not found with id : " + id, 404, new Date()));
+        List<Product> list = this.productRepository.checkInItem(id);
+        if(!list.isEmpty()){
+            if(!check){
+                throw new CustomException.NotImplementedException("This item contains products", 501, new Date());
             } else {
-                this.itemRepository.delete(item);
+                this.productRepository.deleteAll(list);
             }
+        } else {
+            this.itemRepository.delete(item);
         }
     }
 

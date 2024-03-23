@@ -23,11 +23,29 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping(value = "/all")
-    public ResponseEntity<Result> getAllItem() {
-        List<ProductViewDTO> listItem = productService.getAll();
+    @GetMapping("/filters")
+    public ResponseEntity<Result> filterProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Float minPrice,
+            @RequestParam(required = false) Float maxPrice,
+            @RequestParam(required = false) Integer colorId,
+            @RequestParam(required = false) Integer sizeId,
+            @RequestParam(defaultValue = "1") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder
+    ) {
+        Page<ProductViewDTO> products = productService.getAll(keyword, categoryId, minPrice, maxPrice, colorId, sizeId, pageNo, pageSize, sortBy, sortOrder);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Query list item successfully", listItem));
+                .body(new Result(200, "Query list product successfully", products));
+    }
+
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllProduct() {
+        List<ProductViewDTO> listProduct = productService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list item successfully", listProduct));
     }
     @GetMapping()
     public ResponseEntity<Result> getAllProduct(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {

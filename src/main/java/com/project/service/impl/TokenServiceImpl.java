@@ -48,10 +48,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public TokenDTO findById(Integer id) {
-        Token token = this.tokenRepository.findById(id).orElse(null);
-        if(token == null) {
-            throw new CustomException.NotFoundException("Token not found with id : " + id, 404, new Date());
-        }
+        Token token = this.tokenRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Token not found with id : " + id, 404, new Date()));
         return modelMapper.map(token, TokenDTO.class);
     }
 
@@ -75,12 +72,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void delete(Integer id, boolean check) {
-        Token token = this.tokenRepository.findById(id).orElse(null);
-        if(token == null) {
-            throw new CustomException.NotFoundException("Token not found with id : " + id, 404, new Date());
-        } else{
-            this.tokenRepository.delete(token);
-        }
+        Token token = this.tokenRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Token not found with id : " + id, 404, new Date()));
+        this.tokenRepository.delete(token);
     }
 
     @Override
