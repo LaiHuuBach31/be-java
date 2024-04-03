@@ -14,12 +14,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+import static com.project.model.Role.*;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.http.HttpMethod.DELETE;
-import static com.project.model.Role.ADMIN;
-import static com.project.model.Role.MANAGER;
 import static com.project.model.Permission.ADMIN_READ;
 import static com.project.model.Permission.ADMIN_CREATE;
 import static com.project.model.Permission.ADMIN_UPDATE;
@@ -37,6 +36,10 @@ public class SecurityConfiguration {
     private static final String[] WHITE_LIST_URL = {
             "/api/v1/auth/**",
             "/api/v1/file/files/**",
+            "/api/v1/product",
+            "/api/v1/category/all",
+            "/api/v1/size/all",
+            "/api/v1/color/all",
             "/swagger-ui.html"
     };
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -49,6 +52,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers(WHITE_LIST_URL)
                         .permitAll()
+                        .requestMatchers("/api/v1/cart/**").hasAnyRole(ADMIN.name(), MANAGER.name(), USER.name())
                         .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), MANAGER.name())
                         .requestMatchers(GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), MANAGER_READ.name())
                         .requestMatchers(POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), MANAGER_CREATE.name())

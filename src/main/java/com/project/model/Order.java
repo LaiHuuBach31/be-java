@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -15,7 +16,7 @@ import java.util.Set;
 @Table(name = "orders")
 public class Order extends GenericEntity{
     @Column(name = "status")
-    private int status;
+    private Boolean status;
     @Column(name = "total")
     private int total;
     @Column(name = "shippingmethod")
@@ -28,11 +29,9 @@ public class Order extends GenericEntity{
     private Date orderDate;
     @Column(name = "ordercode")
     private String orderCode;
-    @Column(name = "token")
-    private String token;
     @ManyToOne
     @JoinColumn(name = "userId", referencedColumnName = "id")
     private User user;
-    @OneToMany(mappedBy = "order")
-    private Set<OrderDetail> orderProduct;
+//    @OneToMany(mappedBy = "order")
+//    private List<OrderDetail> orderProduct;
 }

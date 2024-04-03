@@ -14,6 +14,9 @@ import java.util.Set;
 @Entity
 @Table(name = "carts")
 public class Cart extends GenericEntity{
+    @Column(name = "isCheckout")
+    private Boolean isCheckout;
+    @Column(name = "quantity")
     private Integer quantity;
     @ManyToOne
     @JoinColumn(name = "productId",referencedColumnName = "id")

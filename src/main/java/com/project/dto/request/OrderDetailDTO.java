@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderDetailDTO {
+    private Integer id;
     private float price;
     private int quantity;
     private float subtotal;

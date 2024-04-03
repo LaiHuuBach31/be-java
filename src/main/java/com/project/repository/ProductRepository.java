@@ -26,11 +26,13 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query( "SELECT p FROM Product p WHERE p.category.id = :categoryId")
     List<Product> findByCategory(Integer categoryId);
 
-    @Query("SELECT p FROM Product p JOIN VariantProduct vp ON p.id = vp.product.id JOIN Color c ON c.id = vp.color.id JOIN Size s ON s.id = vp.size.id " +
+    @Query("SELECT p FROM Product p LEFT JOIN VariantProduct vp ON p.id = vp.product.id LEFT JOIN Color c ON c.id = vp.color.id LEFT JOIN Size s ON s.id = vp.size.id " +
             "WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
             "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
             "AND (:minPrice IS NULL OR :maxPrice IS NULL OR p.price BETWEEN :minPrice AND :maxPrice) " +
             "AND (:colorId IS NULL OR vp.color.id = :colorId) " +
             "AND (:sizeId IS NULL OR vp.size.id = :sizeId)")
     Page<Product> filter(String keyword, Integer categoryId, Float minPrice, Float maxPrice, Integer sizeId, Integer colorId, Pageable pageable);
+    @Query( "SELECT p FROM Product p JOIN VariantProduct vp ON p.id = vp.product.id WHERE p.id = :productId")
+    List<Product> productDetail(Integer productId);
 }

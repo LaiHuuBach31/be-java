@@ -10,6 +10,7 @@ import com.project.exception.base.CustomException;
 import com.project.model.*;
 import com.project.repository.CartRepository;
 import com.project.service.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -36,7 +37,9 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartViewDTO> getAll(){
-        List<Cart> carts = this.cartRepository.findAll();
+        CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDTO user = userService.findByEmail(customUserDetails.getEmail());
+        List<Cart> carts = this.cartRepository.getCart(user.getId());
         return carts.stream().map(e -> modelMapper.map(e, CartViewDTO.class)).collect(Collectors.toList());
     }
 
@@ -109,17 +112,24 @@ public class CartServiceImpl implements CartService {
         Cart cart = null;
         if(quantity != null){
             c.setQuantity(quantity);
-            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
         }
         if(colorId != null){
-            c.setColor(modelMapper.map(colorService.findById(colorId) ,Color.class));
-            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
+            c.setColor(modelMapper.map(colorService.findById(colorId), Color.class));
         }
         if(sizeId != null){
             c.setSize(modelMapper.map(sizeService.findById(sizeId) ,Size.class));
-            cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
         }
+        cart = this.cartRepository.save(modelMapper.map(c, Cart.class));
         return modelMapper.map(cart, CartViewDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public void isCheckout(List<Cart> carts) {
+        for (Cart cart : carts) {
+            cart.setIsCheckout(true);
+            cartRepository.save(cart);
+        }
     }
 
     private CartViewDTO addNewCart(CartDTO cartItem) {

@@ -23,8 +23,15 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/filters")
-    public ResponseEntity<Result> filterProducts(
+    @GetMapping(value = "/all")
+    public ResponseEntity<Result> getAllProduct() {
+        List<ProductViewDTO> listProduct = productService.getAll();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new Result(200, "Query list item successfully", listProduct));
+    }
+
+    @GetMapping("")
+    public ResponseEntity<Result> getAllProduct(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) Float minPrice,
@@ -41,27 +48,18 @@ public class ProductController {
                 .body(new Result(200, "Query list product successfully", products));
     }
 
-    @GetMapping(value = "/all")
-    public ResponseEntity<Result> getAllProduct() {
-        List<ProductViewDTO> listProduct = productService.getAll();
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Query list item successfully", listProduct));
-    }
-    @GetMapping()
-    public ResponseEntity<Result> getAllProduct(@Param("keyword") String keyword, @RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<ProductViewDTO> listProduct = productService.getAll(keyword, pageNo, 8);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Query list product successfully", listProduct));
-    }
-    @GetMapping("/filter")
-    public ResponseEntity<Result> filterByCategory(@Param("categoryId") Integer categoryId,@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
-        Page<ProductViewDTO> listProduct = productService.filter(categoryId, pageNo, 8);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new Result(200, "Query list product by category successfully", listProduct));
-    }
+
+//    @GetMapping(value = "/{id}")
+//    public ResponseEntity<Result> getById(@PathVariable Integer id) {
+//        ProductViewDTO productDto = productService.findById(id);
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(new Result(200, "Query product by id successfully", productDto));
+//    }
+
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Result> getById(@PathVariable Integer id) {
-        ProductViewDTO productDto = productService.findById(id);
+    public ResponseEntity<Result> getProductDetail(@PathVariable Integer id) {
+        List<ProductViewDTO>  productDto = productService.getProductDetail(id);
+        System.out.println(productDto);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Result(200, "Query product by id successfully", productDto));
     }

@@ -100,6 +100,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductViewDTO> getProductDetail(Integer productId) {
+        return this.productRepository.productDetail(productId).stream()
+                .map(item -> modelMapper.map(item, ProductViewDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ProductViewDTO findById(Integer id) {
         Product product = this.productRepository.findById(id).orElseThrow(()->new CustomException.NotFoundException("Product not found with id : " + id, 404, new Date()));
         return modelMapper.map(product, ProductViewDTO.class);
@@ -171,30 +178,6 @@ public class ProductServiceImpl implements ProductService {
             throw  new CustomException.NotImplementedException("Product name already taken", 501, new Date());
         }
     }
-    @Override
-    public Page<ProductViewDTO> filter(Integer categoryId, Integer pageNo, Integer pageSize){
-        Page<Product> products;
-        Pageable pageable;
-        List<Product> list = this.productRepository.findByCategory(categoryId);
-        if(list.isEmpty()){
-            return  null;
-        } else{
-            pageable = PageRequest.of(pageNo-1, pageSize);
-            int start = (int) pageable.getOffset();
-            int end = (pageable.getOffset() + pageable.getPageSize()) > list.size() ? list.size() : (int) (pageable.getOffset() + pageable.getPageSize());
-            list = list.subList(start, end);
-            products = new PageImpl<>(list, pageable, this.productRepository.findByCategory(categoryId).size());
-        }
 
-        if (!products.isEmpty()) {
-            List<ProductViewDTO> productDtoList = products.getContent()
-                    .stream()
-                    .map(product -> modelMapper.map(product, ProductViewDTO.class))
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(productDtoList, pageable, products.getTotalElements());
-        }
-        return null;
-    }
 
 }

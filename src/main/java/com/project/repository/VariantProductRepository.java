@@ -22,4 +22,5 @@ public interface VariantProductRepository extends JpaRepository<VariantProduct, 
 
     @Query( "SELECT vp FROM VariantProduct vp WHERE vp.product.id = :productId")
     List<VariantProduct> getVariantByProduct(Integer productId);
+
 }

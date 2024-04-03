@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -36,12 +37,12 @@ public class Product extends GenericEntity{
     @JsonIgnore
     private Set<Image> images;
     @OneToMany(mappedBy = "product")
-    @JsonIgnore
     private Set<VariantProduct> productAttr;
+//    @OneToMany(mappedBy = "product")
+//    private Set<OrderDetail> productOrder;
 //    @OneToMany(mappedBy = "product")
 //    @JsonIgnore
 //    private Set<Cart> carts;
-//    @OneToMany(mappedBy = "product")
-//    private Set<OrderDetail> productOrder;
+
 
 }

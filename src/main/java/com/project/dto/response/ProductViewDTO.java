@@ -21,9 +21,9 @@ public class ProductViewDTO {
     private String description;
     private Category category;
     private Item item;
-    @JsonIgnore
+//    @JsonIgnore
     private Set<Image> images;
-    @JsonIgnore
+//    @JsonIgnore
     private Set<VariantProduct> productAttr;
 //    @JsonIgnore
 //    private Set<Cart> carts;

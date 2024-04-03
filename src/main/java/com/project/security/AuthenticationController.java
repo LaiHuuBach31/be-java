@@ -1,4 +1,4 @@
-package com.project.auth;
+package com.project.security;
 
 import com.project.model.Result;
 import jakarta.servlet.http.HttpServletRequest;

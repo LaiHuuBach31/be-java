@@ -1,4 +1,4 @@
-package com.project.auth;
+package com.project.security;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

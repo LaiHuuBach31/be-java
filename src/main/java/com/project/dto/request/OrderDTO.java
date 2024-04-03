@@ -13,14 +13,13 @@ import java.util.Set;
 @AllArgsConstructor
 public class OrderDTO {
     private Integer id;
-    private int status;
+    private Boolean status;
     private int total;
     private String shippingMethod;
     private String paymentMethod;
     private String orderNote;
     private Date orderDate;
     private String orderCode;
-    private String token;
     private User user;
     private Set<OrderDetail> orderProduct;
 }
